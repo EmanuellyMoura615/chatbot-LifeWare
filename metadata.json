@@ -1,0 +1,5 @@
+{
+  "name": "LIfeWare",
+  "description": "Um chatbot interativo e educacional que ensina os usuários sobre o conceito, os impactos e as soluções para a obsolescência programada, utilizando a API do Gemini.",
+  "requestFramePermissions": []
+}
