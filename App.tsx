@@ -62,18 +62,17 @@ const quizData = [
 ];
 
 // --- HELPER & UI COMPONENTS ---
-
 const HeaderIcon: React.FC<{ className?: string }> = ({ className }) => (
-    <svg className={className} xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-      <path d="M10 10-1 4" />
-      <path d="m14 14 7-6" />
-      <path d="M4 20 20 4" />
-      <path d="m15 4-1 1" />
-      <path d="m10 9 1-1" />
-      <path d="M14 20h-4a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" />
-      <path d="M18 14h-4a2 2 0 0 0-2 2v4a2 2 0 0 0 2 2h4a2 2 0 0 0 2-2v-4a2 2 0 0 0-2-2Z" />
-    </svg>
-  );
+  <svg className={className} xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <path d="M10 10-1 4" />
+    <path d="m14 14 7-6" />
+    <path d="M4 20 20 4" />
+    <path d="m15 4-1 1" />
+    <path d="m10 9 1-1" />
+    <path d="M14 20h-4a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" />
+    <path d="M18 14h-4a2 2 0 0 0-2 2v4a2 2 0 0 0 2 2h4a2 2 0 0 0 2-2v-4a2 2 0 0 0-2-2Z" />
+  </svg>
+);
 
 const BotIcon: React.FC<{ className?: string }> = ({ className }) => (
   <svg className={className} xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor">
@@ -97,9 +96,9 @@ const SendIcon: React.FC<{ className?: string }> = ({ className }) => (
 );
 
 const LoadingSpinner: React.FC = () => (
-    <div className="flex justify-center items-center p-4">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-400"></div>
-    </div>
+  <div className="flex justify-center items-center p-4">
+    <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-400"></div>
+  </div>
 );
 
 interface ChatBubbleProps {
@@ -138,9 +137,7 @@ const SuggestionChip: React.FC<SuggestionChipProps> = ({ text, onClick, index })
   </button>
 );
 
-
 // --- MAIN APP COMPONENT ---
-
 const App: React.FC = () => {
   const [chat, setChat] = useState<Chat | null>(null);
   const [messages, setMessages] = useState<Message[]>([]);
@@ -185,18 +182,18 @@ const App: React.FC = () => {
     },
     required: ['response', 'suggestions'],
   };
-  
+
   const parseResponse = (responseText: string) => {
     try {
-        const data = JSON.parse(responseText);
-        const mainText = data.response || '';
-        const newSuggestions = data.suggestions || [];
-        const action = data.action || null;
-        return { mainText, newSuggestions, action };
+      const data = JSON.parse(responseText);
+      const mainText = data.response || '';
+      const newSuggestions = data.suggestions || [];
+      const action = data.action || null;
+      return { mainText, newSuggestions, action };
     } catch (e) {
-        console.error("Falha ao analisar a resposta JSON:", responseText, e);
-        // Fallback para respostas que não são JSON
-        return { mainText: "Desculpe, tive um problema ao processar a resposta. Tente novamente.", newSuggestions: [], action: null };
+      console.error("Falha ao analisar a resposta JSON:", responseText, e);
+      // Fallback para respostas que não são JSON
+      return { mainText: "Desculpe, tive um problema ao processar a resposta. Tente novamente.", newSuggestions: [], action: null };
     }
   };
 
@@ -213,68 +210,70 @@ const App: React.FC = () => {
     };
     setMessages(prev => [...prev, quizStartMessage]);
   };
-  
-  const endQuiz = async () => {
+
+  const endQuiz = async (finalScore?: number) => {
     setIsInQuiz(false);
+    const usedScore = typeof finalScore === 'number' ? finalScore : score;
+
     let feedback = '';
-    const percentage = (score / quizData.length) * 100;
+    const percentage = (usedScore / quizData.length) * 100;
     if (percentage === 100) {
-        feedback = 'Uau, pontuação perfeita! Você é um expert no assunto!';
+      feedback = 'Uau, pontuação perfeita! Você é um expert no assunto!';
     } else if (percentage >= 75) {
-        feedback = 'Excelente desempenho! Você realmente entendeu os conceitos principais.';
+      feedback = 'Excelente desempenho! Você realmente entendeu os conceitos principais.';
     } else if (percentage >= 50) {
-        feedback = 'Bom trabalho! Você está no caminho certo para entender tudo sobre obsolescência programada.';
+      feedback = 'Bom trabalho! Você está no caminho certo para entender tudo sobre obsolescência programada.';
     } else {
-        feedback = 'Continue aprendendo! Cada erro é uma oportunidade. Que tal explorarmos mais algum tópico?';
+      feedback = 'Continue aprendendo! Cada erro é uma oportunidade. Que tal explorarmos mais algum tópico?';
     }
 
     const finalMessage: Message = {
-        id: 'quiz-end',
-        role: 'model',
-        text: `Quiz finalizado! Você acertou ${score} de ${quizData.length} perguntas. \n\n${feedback}`,
+      id: 'quiz-end',
+      role: 'model',
+      text: `Quiz finalizado! Você acertou ${usedScore} de ${quizData.length} perguntas. \n\n${feedback}`,
     };
     setMessages(prev => [...prev, finalMessage]);
 
-    // Get new suggestions from the model to continue the conversation
     if (chat) {
-        setIsLoading(true);
-        try {
-            const response = await chat.sendMessage({ message: "O quiz terminou. Por favor, me dê novas sugestões de tópicos para continuar a conversa." });
-            const { newSuggestions } = parseResponse(response.text);
-            setSuggestions(newSuggestions);
-        } catch (err) {
-            console.error("Failed to get post-quiz suggestions", err);
-            setError("Não foi possível obter novas sugestões.");
-        } finally {
-            setIsLoading(false);
-        }
+      setIsLoading(true);
+      try {
+        const response = await chat.sendMessage({ message: "O quiz terminou. Por favor, me dê novas sugestões de tópicos para continuar a conversa." });
+        const { newSuggestions } = parseResponse(response.text);
+        setSuggestions(newSuggestions);
+      } catch (err) {
+        console.error("Failed to get post-quiz suggestions", err);
+        setError("Não foi possível obter novas sugestões.");
+      } finally {
+        setIsLoading(false);
+      }
     }
-};
+  };
 
   const handleAnswer = (selectedIndex: number) => {
     const currentQuestion = quizData[currentQuestionIndex];
     const isCorrect = selectedIndex === currentQuestion.correctAnswerIndex;
-  
+
     const userAnswerMessage: Message = {
       id: `user-answer-${currentQuestionIndex}`,
       role: 'user',
       text: currentQuestion.options[selectedIndex],
     };
-    
-    let newScore = score;
+
+    // atualiza o score de forma segura (funcional)
     if (isCorrect) {
-      newScore = score + 1;
-      setScore(newScore);
+      setScore(prev => prev + 1);
     }
-  
+
     const feedbackMessage: Message = {
       id: `model-feedback-${currentQuestionIndex}`,
       role: 'model',
-      text: isCorrect ? `Correto! ${currentQuestion.explanation}` : `Incorreto. A resposta certa era: "${currentQuestion.options[currentQuestion.correctAnswerIndex]}".\n\n${currentQuestion.explanation}`,
+      text: isCorrect
+        ? `Correto! ${currentQuestion.explanation}`
+        : `Incorreto. A resposta certa era: "${currentQuestion.options[currentQuestion.correctAnswerIndex]}".\n\n${currentQuestion.explanation}`,
     };
-    
+
     setMessages(prev => [...prev, userAnswerMessage, feedbackMessage]);
-  
+
     const nextIndex = currentQuestionIndex + 1;
     if (nextIndex < quizData.length) {
       setTimeout(() => {
@@ -288,18 +287,19 @@ const App: React.FC = () => {
         setCurrentQuestionIndex(nextIndex);
       }, 1500);
     } else {
-       setTimeout(() => endQuiz(), 1500);
+      // última pergunta: calcula o score final localmente (score atual + 1 se acertou)
+      const guessedFinalScore = isCorrect ? score + 1 : score;
+      setTimeout(() => endQuiz(guessedFinalScore), 1500);
     }
   };
-  
-  
+
   const fetchInitialMessage = useCallback(async (chatSession: Chat) => {
     setIsLoading(true);
     setError(null);
     try {
       const response = await chatSession.sendMessage({ message: "Olá! Por favor, se apresente e me dê as primeiras opções para começar." });
       const { mainText, newSuggestions } = parseResponse(response.text);
-      
+
       const initialMessage: Message = {
         id: 'initial-0',
         role: 'model',
@@ -346,8 +346,8 @@ const App: React.FC = () => {
 
   useEffect(() => {
     chatWindowRef.current?.scrollTo({
-        top: chatWindowRef.current.scrollHeight,
-        behavior: 'smooth'
+      top: chatWindowRef.current.scrollHeight,
+      behavior: 'smooth'
     });
   }, [messages, isLoading]);
 
@@ -370,23 +370,23 @@ const App: React.FC = () => {
       const { mainText, newSuggestions, action } = parseResponse(response.text);
 
       if (action === 'start_quiz') {
-         if (mainText) {
-             const modelMessage: Message = {
-                id: (Date.now() + 1).toString(),
-                role: 'model',
-                text: mainText,
-              };
-              setMessages(prev => [...prev, modelMessage]);
-         }
-        startQuiz();
-      } else {
+        if (mainText) {
           const modelMessage: Message = {
             id: (Date.now() + 1).toString(),
             role: 'model',
             text: mainText,
           };
           setMessages(prev => [...prev, modelMessage]);
-          setSuggestions(newSuggestions);
+        }
+        startQuiz();
+      } else {
+        const modelMessage: Message = {
+          id: (Date.now() + 1).toString(),
+          role: 'model',
+          text: mainText,
+        };
+        setMessages(prev => [...prev, modelMessage]);
+        setSuggestions(newSuggestions);
       }
     } catch (err) {
       console.error(err);
@@ -430,12 +430,12 @@ const App: React.FC = () => {
         <div className="max-w-4xl mx-auto">
           {isInQuiz ? (
             <div className="flex flex-col items-center gap-3">
-                 <p className="text-sm text-gray-400 mb-2">Escolha uma opção:</p>
-                 <div className="flex gap-2 justify-center flex-wrap">
-                    {quizData[currentQuestionIndex].options.map((option, index) => (
-                        <SuggestionChip key={index} text={option} onClick={() => handleAnswer(index)} />
-                    ))}
-                 </div>
+              <p className="text-sm text-gray-400 mb-2">Escolha uma opção:</p>
+              <div className="flex gap-2 justify-center flex-wrap">
+                {quizData[currentQuestionIndex].options.map((option, index) => (
+                  <SuggestionChip key={index} text={option} onClick={() => handleAnswer(index)} />
+                ))}
+              </div>
             </div>
           ) : (
             <>
@@ -474,3 +474,4 @@ const App: React.FC = () => {
 };
 
 export default App;
+
